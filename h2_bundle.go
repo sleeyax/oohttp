@@ -7754,13 +7754,47 @@ func (t *http2Transport) newClientConn(c net.Conn, singleUse bool) (*http2Client
 
 	var initialSettings []http2Setting
 	if t.t1.hasCustomInitialSettings {
-		initialSettings = []http2Setting{
-			{ID: http2SettingHeaderTableSize, Val: t.t1.HeaderTableSize},
-			{ID: http2SettingEnablePush, Val: t.t1.EnablePush},
-			{ID: http2SettingMaxConcurrentStreams, Val: t.t1.MaxConcurrentStreams},
-			{ID: http2SettingInitialWindowSize, Val: t.t1.InitialWindowSize},
-			{ID: http2SettingMaxFrameSize, Val: t.t1.MaxFrameSize},
-			{ID: http2SettingMaxHeaderListSize, Val: t.t1.MaxHeaderListSize},
+		if t.t1.hasCustomHeaderTableSize {
+			fingerprint := http2Setting{
+				ID:	http2SettingHeaderTableSize,
+				Val: t.t1.HeaderTableSize,
+			}
+			initialSettings = append(initialSettings, fingerprint)
+		}
+		if t.t1.hasCustomEnablePush {
+			fingerprint := http2Setting{
+				ID:	http2SettingEnablePush,
+				Val: t.t1.EnablePush,
+			}
+			initialSettings = append(initialSettings, fingerprint)
+		}
+		if t.t1.hasCustomInitialWindowSize {
+			fingerprint := http2Setting{
+				ID:	http2SettingInitialWindowSize,
+				Val: t.t1.InitialWindowSize,
+			}
+			initialSettings = append(initialSettings, fingerprint)
+		}
+		if t.t1.hasCustomMaxConcurrentStreams {
+			fingerprint := http2Setting{
+				ID:	http2SettingMaxConcurrentStreams,
+				Val: t.t1.MaxConcurrentStreams,
+			}
+			initialSettings = append(initialSettings, fingerprint)
+		}
+		if t.t1.hasCustomMaxFrameSize {
+			fingerprint := http2Setting{
+				ID:	http2SettingMaxFrameSize,
+				Val: t.t1.MaxFrameSize,
+			}
+			initialSettings = append(initialSettings, fingerprint)
+		}
+		if t.t1.hasCustomMaxHeaderListSize {
+			fingerprint := http2Setting{
+				ID:	http2SettingMaxHeaderListSize,
+				Val: t.t1.MaxHeaderListSize,
+			}
+			initialSettings = append(initialSettings, fingerprint)
 		}
 	} else {
 		initialSettings = []http2Setting{
@@ -7780,7 +7814,7 @@ func (t *http2Transport) newClientConn(c net.Conn, singleUse bool) (*http2Client
 
 	cc.bw.Write(http2clientPreface)
 	cc.fr.WriteSettings(initialSettings...)
-	cc.fr.WriteWindowUpdate(0, http2transportDefaultConnFlow)
+	cc.fr.WriteWindowUpdate(0, t.t1.WindowSizeIncrement)
 	cc.inflow.add(http2transportDefaultConnFlow + http2initialWindowSize)
 	cc.bw.Flush()
 	if cc.werr != nil {
